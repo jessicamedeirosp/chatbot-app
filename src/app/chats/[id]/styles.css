@@ -1,0 +1,146 @@
+/* Estilos principais do chat */
+.chat-container {
+  display: flex;
+  height: 100vh;
+}
+
+.user-menu {
+  width: 300px;
+  background-color: #f0f0f0;
+  padding: 20px;
+  border-right: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.user-info h3 {
+  margin-top: 10px;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.online-users {
+  margin-top: 20px;
+}
+
+.online-users h3 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.online-users ul {
+  list-style: none;
+  padding: 0;
+}
+
+.online-users li {
+  background-color: #d1ffd1;
+  margin: 5px 0;
+  padding: 5px;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+/* Estilos do chat */
+.chat-detail {
+  flex-grow: 1;
+  padding: 20px;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.chat-header h2 {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.message-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  padding-right: 10px;
+}
+
+.message {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 10px;
+  position: relative;
+}
+
+.message.sent {
+  background-color: #dcf8c6;
+  align-self: flex-end;
+  max-width: 80%;
+}
+
+.message.received {
+  background-color: #fff;
+  align-self: flex-start;
+  max-width: 80%;
+}
+
+.message-content p {
+  margin: 0;
+}
+
+.message-content small {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.read-status {
+  font-size: 0.8rem;
+  color: #4caf50;
+  font-style: italic;
+}
+
+.send-message {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.send-message textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  margin-right: 10px;
+  font-size: 1rem;
+  resize: none;
+}
+
+.send-message button {
+  padding: 10px;
+  background-color: #25d366;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.send-message button:hover {
+  background-color: #128c7e;
+}
