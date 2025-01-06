@@ -6,7 +6,7 @@ import React, {
   ReactNode,
   useEffect,
 } from 'react';
-import { api } from '../utils/api';
+import { api, API_URL } from '../utils/api';
 
 interface User {
   user_id: string;
@@ -82,8 +82,6 @@ const ACTIONS = {
   SET_MESSAGES: 'SET_MESSAGES',
 };
 
-const API_URL = 'http://localhost:8000';
-
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case ACTIONS.MESSAGE_RECEIVED:
@@ -102,7 +100,6 @@ function reducer(state: State, action: Action): State {
       };
 
     case ACTIONS.CHAT_READ:
-      console.log('lastRead', action.payload.lastRead);
       return {
         ...state,
         lastRead: {
@@ -133,7 +130,6 @@ function reducer(state: State, action: Action): State {
       };
 
     case ACTIONS.SET_MESSAGES:
-      console.log('messages', action.payload.messages);
       return {
         ...state,
         messages: action.payload.messages,
@@ -149,11 +145,10 @@ interface AppProviderProps {
   children: ReactNode;
 }
 
-export function AppProvider({ children }: AppProviderProps) {
+export function AppProvider({ children }: Readonly<AppProviderProps>) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
-    console.log('testee');
     const socket = new WebSocket(
       `ws://localhost:8000/ws/${state.currentChat?.chat_id}`
     );
@@ -161,9 +156,6 @@ export function AppProvider({ children }: AppProviderProps) {
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       console.log('Event Type:', data.event);
-
-      console.log('Payload:', data.data);
-      console.log('teste com event', data.event);
       handleEvent(data);
     };
 
@@ -172,12 +164,15 @@ export function AppProvider({ children }: AppProviderProps) {
     socket.onclose = () => console.log('WebSocket connection closed.');
 
     (async () => {
-      const { data: messages } = await api.get(
-        `/chats/${state.currentChat?.chat_id}/messages`
-      );
-
-      setMessagesChat(messages);
-      console.log('teste com messages', messages);
+      try {
+        if (!state.currentChat?.chat_id) return;
+        const { data: messages } = await api.get(
+          `/chats/${state.currentChat?.chat_id}/messages`
+        );
+        setMessagesChat(messages);
+      } catch (error) {
+        console.error('Erro ao buscar mensagens:', error);
+      }
     })();
     return () => {
       socket.close();
@@ -209,7 +204,6 @@ export function AppProvider({ children }: AppProviderProps) {
         break;
 
       case 'chat_read':
-        console.log('lastRead', event.data.last_read_message_id);
         dispatch({
           type: ACTIONS.CHAT_READ,
           payload: {

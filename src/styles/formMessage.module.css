@@ -1,0 +1,32 @@
+.send-message {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.send-message textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  margin-right: 10px;
+  font-size: 1rem;
+  resize: none;
+}
+
+.send-message button {
+  padding: 10px;
+  background-color: #25d366;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.send-message button:hover {
+  background-color: #128c7e;
+}

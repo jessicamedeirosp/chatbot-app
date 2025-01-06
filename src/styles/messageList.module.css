@@ -1,0 +1,33 @@
+.message {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 10px;
+  position: relative;
+}
+
+.message.sent {
+  background-color: #dcf8c6;
+  align-self: flex-end;
+  max-width: 80%;
+}
+
+.message.received {
+  background-color: #fff;
+  align-self: flex-start;
+  max-width: 80%;
+}
+
+.message-content p {
+  margin: 0;
+}
+
+.message-content small {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.read-status {
+  font-size: 0.8rem;
+  color: #4caf50;
+  font-style: italic;
+}
