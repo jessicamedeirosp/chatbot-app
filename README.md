@@ -10,8 +10,10 @@ Para executar o projeto:
   ```bash	
   npm install
   ```
+
 3. Execute o projeto
-   ```bash
+   
+  ```bash
    npm run dev
    ```
 
