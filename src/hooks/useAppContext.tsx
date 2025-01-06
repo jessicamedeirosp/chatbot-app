@@ -5,6 +5,7 @@ import React, {
   useContext,
   ReactNode,
   useEffect,
+  useMemo,
 } from 'react';
 import { api, API_URL } from '../utils/api';
 
@@ -163,7 +164,7 @@ export function AppProvider({ children }: Readonly<AppProviderProps>) {
     socket.onerror = (error) => console.error('WebSocket error:', error);
     socket.onclose = () => console.log('WebSocket connection closed.');
 
-    (async () => {
+    const fetchMessages = async () => {
       try {
         if (!state.currentChat?.chat_id) return;
         const { data: messages } = await api.get(
@@ -173,7 +174,10 @@ export function AppProvider({ children }: Readonly<AppProviderProps>) {
       } catch (error) {
         console.error('Erro ao buscar mensagens:', error);
       }
-    })();
+    };
+
+    fetchMessages();
+
     return () => {
       socket.close();
     };
@@ -257,30 +261,29 @@ export function AppProvider({ children }: Readonly<AppProviderProps>) {
     await fetchChats(user_id);
   };
 
-  const sendMessage = async (message: Message) => {
-    return await api.post(`/chats/${state.currentChat?.chat_id}/messages`, {
-      user_id: message.user_id,
-      type: message.type,
-      content: message.content,
-    });
-  };
+  const contextValue = useMemo(() => {
+    const sendMessage = async (message: Message) => {
+      await api.post(`/chats/${state.currentChat?.chat_id}/messages`, {
+        user_id: message.user_id,
+        type: message.type,
+        content: message.content,
+      });
+    };
+
+    return {
+      state,
+      handleEvent,
+      loginUser,
+      fetchChats,
+      setCurrentChat,
+      sendMessage,
+    };
+  }, [state, loginUser, fetchChats, setCurrentChat]);
 
   return (
-    <AppContext.Provider
-      value={{
-        state,
-        handleEvent,
-        loginUser,
-        fetchChats,
-        setCurrentChat,
-        sendMessage,
-      }}
-    >
-      {children}
-    </AppContext.Provider>
+    <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
   );
 }
-
 export function useAppContext(): AppContextType {
   const context = useContext(AppContext);
   if (!context) {
