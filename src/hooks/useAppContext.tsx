@@ -1,16 +1,24 @@
 'use client';
-import React, { createContext, useReducer, useContext, ReactNode } from 'react';
+import React, {
+  createContext,
+  useReducer,
+  useContext,
+  ReactNode,
+  useEffect,
+} from 'react';
+import { api } from '../utils/api';
 
 interface User {
-  username: string;
+  user_id: string;
   status: 'online' | 'offline';
 }
 
-interface Message {
+export interface Message {
   id: string;
   content: string;
+  type: 'text' | 'audio' | 'image';
   timestamp: string;
-  userId: string;
+  user_id: string;
 }
 
 interface LastRead {
@@ -44,14 +52,15 @@ interface Action {
 interface AppContextType {
   state: State;
   handleEvent: (event: EventPayload) => void;
-  loginUser: (username: string) => void;
-  fetchChats: (username: string) => void;
+  loginUser: (user_id: string) => void;
+  fetchChats: (user_id: string) => void;
   setCurrentChat: (chat: Chat) => void;
+  sendMessage: (message: Message) => Promise<void>;
 }
 
 const initialState: State = {
   user: {
-    username: '',
+    user_id: '',
     status: 'offline',
   },
   messages: [],
@@ -70,6 +79,7 @@ const ACTIONS = {
   USER_LOGGED_IN: 'USER_LOGGED_IN',
   SET_CHATS: 'SET_CHATS',
   SET_CURRENT_CHAT: 'SET_CURRENT_CHAT',
+  SET_MESSAGES: 'SET_MESSAGES',
 };
 
 const API_URL = 'http://localhost:8000';
@@ -92,6 +102,7 @@ function reducer(state: State, action: Action): State {
       };
 
     case ACTIONS.CHAT_READ:
+      console.log('lastRead', action.payload.lastRead);
       return {
         ...state,
         lastRead: {
@@ -104,24 +115,29 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         user: {
-          username: action.payload.username,
+          user_id: action.payload.user_id,
           status: 'online',
         },
       };
 
     case ACTIONS.SET_CHATS:
-      console.log('action.payload.chats:', action.payload.chats);
       return {
         ...state,
         chats: action.payload.chats,
       };
+
     case ACTIONS.SET_CURRENT_CHAT:
-      console.log('action.payload.currentChat:', action.payload.chat);
       return {
         ...state,
         currentChat: action.payload.chat,
       };
 
+    case ACTIONS.SET_MESSAGES:
+      console.log('messages', action.payload.messages);
+      return {
+        ...state,
+        messages: action.payload.messages,
+      };
     default:
       return state;
   }
@@ -136,26 +152,37 @@ interface AppProviderProps {
 export function AppProvider({ children }: AppProviderProps) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const fetchChats = async (username: string) => {
-    try {
-      const response = await fetch(`${API_URL}/chats`);
-      const chats: Chat[] = await response.json();
-      console.log('Resposta da API:', chats, 'user: ', username);
+  useEffect(() => {
+    console.log('testee');
+    const socket = new WebSocket(
+      `ws://localhost:8000/ws/${state.currentChat?.chat_id}`
+    );
 
-      const userChats = chats.filter((chat) =>
-        chat.participants.includes(username)
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Event Type:', data.event);
+
+      console.log('Payload:', data.data);
+      console.log('teste com event', data.event);
+      handleEvent(data);
+    };
+
+    socket.onopen = () => console.log('WebSocket connection opened.');
+    socket.onerror = (error) => console.error('WebSocket error:', error);
+    socket.onclose = () => console.log('WebSocket connection closed.');
+
+    (async () => {
+      const { data: messages } = await api.get(
+        `/chats/${state.currentChat?.chat_id}/messages`
       );
 
-      console.log('Resposta da API 2:', userChats);
-      dispatch({
-        type: ACTIONS.SET_CHATS,
-        payload: { chats: userChats },
-      });
-    } catch (error) {
-      console.error('Erro ao buscar chats:', error);
-      return [];
-    }
-  };
+      setMessagesChat(messages);
+      console.log('teste com messages', messages);
+    })();
+    return () => {
+      socket.close();
+    };
+  }, [state.currentChat?.chat_id]);
 
   const handleEvent = (event: EventPayload) => {
     switch (event.event) {
@@ -167,7 +194,8 @@ export function AppProvider({ children }: AppProviderProps) {
               id: event.data.id,
               content: event.data.content,
               timestamp: event.data.timestamp,
-              userId: event.data.user_id,
+              user_id: event.data.user_id,
+              type: event.data.type,
             },
           },
         });
@@ -181,6 +209,7 @@ export function AppProvider({ children }: AppProviderProps) {
         break;
 
       case 'chat_read':
+        console.log('lastRead', event.data.last_read_message_id);
         dispatch({
           type: ACTIONS.CHAT_READ,
           payload: {
@@ -195,24 +224,63 @@ export function AppProvider({ children }: AppProviderProps) {
     }
   };
 
+  const fetchChats = async (user_id: string) => {
+    try {
+      const response = await fetch(`${API_URL}/chats`);
+      const chats: Chat[] = await response.json();
+      const userChats = chats.filter((chat) =>
+        chat.participants.includes(user_id)
+      );
+      dispatch({
+        type: ACTIONS.SET_CHATS,
+        payload: { chats: userChats },
+      });
+    } catch (error) {
+      console.error('Erro ao buscar chats:', error);
+      return [];
+    }
+  };
+
   const setCurrentChat = (chat: Chat) => {
     dispatch({
       type: ACTIONS.SET_CURRENT_CHAT,
       payload: { chat },
     });
   };
-  const loginUser = async (username: string) => {
+  const setMessagesChat = (messages: Message) => {
+    dispatch({
+      type: ACTIONS.SET_MESSAGES,
+      payload: { messages },
+    });
+  };
+
+  const loginUser = async (user_id: string) => {
     dispatch({
       type: ACTIONS.USER_LOGGED_IN,
-      payload: { username },
+      payload: { user_id },
     });
 
-    await fetchChats(username);
+    await fetchChats(user_id);
+  };
+
+  const sendMessage = async (message: Message) => {
+    return await api.post(`/chats/${state.currentChat?.chat_id}/messages`, {
+      user_id: message.user_id,
+      type: message.type,
+      content: message.content,
+    });
   };
 
   return (
     <AppContext.Provider
-      value={{ state, handleEvent, loginUser, fetchChats, setCurrentChat }}
+      value={{
+        state,
+        handleEvent,
+        loginUser,
+        fetchChats,
+        setCurrentChat,
+        sendMessage,
+      }}
     >
       {children}
     </AppContext.Provider>
