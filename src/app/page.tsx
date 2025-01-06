@@ -36,10 +36,10 @@ export default function JoinPage() {
           maxWidth: '400px',
         }}
       >
-        <h1 style={{ marginBottom: '20px' }}>Join</h1>
+        <h1 style={{ marginBottom: '20px' }}>Entrar</h1>
         <input
           type="text"
-          placeholder="Enter your username"
+          placeholder="digite seu username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           style={{
@@ -72,7 +72,7 @@ export default function JoinPage() {
             (e.currentTarget.style.backgroundColor = '#4CAF50')
           }
         >
-          Join Chat
+          Entrar
         </button>
       </div>
     </div>
